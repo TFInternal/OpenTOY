@@ -13,7 +13,12 @@ public class BaseRequest
     [FromHeader("npsn")]
     public long Id { get; set; }
     [FromHeader]
-    public required NpParams NpParams { get; set; }
+    public NpParams NpParams { get; set; } = null!;
+
+    public override string ToString()
+    {
+        return $"[UUID: {Uuid}, ID: {Id}, NpParams: {NpParams}]";
+    }
 }
 
 public class NpParams
@@ -22,4 +27,9 @@ public class NpParams
     public string Os { get; set; } = string.Empty;
     public string SvcId { get; set; } = string.Empty;
     public string NpToken { get; set; } = string.Empty;
+
+    public override string ToString()
+    {
+        return $"[Version: {SdkVer}, OS: {Os}, Service: {SvcId}, NpToken: {NpToken}]";
+    }
 }

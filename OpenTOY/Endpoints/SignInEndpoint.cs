@@ -22,8 +22,8 @@ public class SignInEndpoint : Endpoint<SignInRequest, SignInResponse>
 
     public override async Task HandleAsync(SignInRequest req, CancellationToken ct)
     {
-        Logger.LogInformation("SignIn - Device: {DeviceName}, {DeviceType} UUID: {Uuid}, {Uuid2}, UserId: {UserId}, Passwd: {Passwd}, MemType: {MemType}",
-            req.DeviceInfo.Name, req.DeviceInfo.Device, req.Uuid, req.Uuid2, req.UserId, req.Passwd, req.MemType);
+        Logger.LogInformation("SignIn - Device: {DeviceName}, {DeviceType} UUID: {Uuid}, {Uuid2}, UserId: {UserId}, Passwd: {Passwd}, MemType: {MemType} Params: {Params}",
+            req.DeviceInfo.Name, req.DeviceInfo.Device, req.Uuid, req.Uuid2, req.UserId, req.Passwd, req.MemType, req.NpParams);
 
         var serviceId = int.Parse(req.NpParams.SvcId);
         var userId = 10;

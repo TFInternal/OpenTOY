@@ -22,7 +22,8 @@ public class GetUserInfoEndpoint : Endpoint<GetUserInfoRequest, GetUserInfoRespo
 
     public override async Task HandleAsync(GetUserInfoRequest req, CancellationToken ct)
     {
-        Logger.LogInformation("GetUserInfo - ID: {Id} AdvertisingId: {AdvertisingId}", req.Id, req.AdvertisingId);
+        Logger.LogInformation("GetUserInfo - ID: {Id} AdvertisingId: {AdvertisingId} Params: {Params}",
+            req.Id, req.AdvertisingId, req.NpParams);
 
         var response = new GetUserInfoResponse
         {

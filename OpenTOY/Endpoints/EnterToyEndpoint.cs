@@ -20,7 +20,7 @@ public class EnterToyEndpoint : Endpoint<EnterToyRequest, EnterToyResponse>
 
     public override async Task HandleAsync(EnterToyRequest req, CancellationToken ct)
     {
-        Logger.LogInformation("EnterToy - MNC: {MNC} MCC: {MCC}", req.Mnc, req.Mcc);
+        Logger.LogInformation("EnterToy - MNC: {MNC} MCC: {MCC} Params: {Params}", req.Mnc, req.Mcc, req.NpParams);
 
         var response = new EnterToyResponse
         {
