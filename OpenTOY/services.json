@@ -1,0 +1,21 @@
+{
+  "ServiceSettings": {
+    "Services": {
+      "1253": {
+        "Title": "Titanfall Frontline_Live",
+        "LoginMethods": [
+          9999
+        ]
+      },
+      "1300": {
+        "Title": "Titanfall Assault_Live",
+        "LoginMethods": [
+          4,
+          101,
+          9998,
+          9999
+        ]
+      }
+    }
+  }
+}

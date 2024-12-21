@@ -1,10 +1,19 @@
 using FastEndpoints;
+using Microsoft.Extensions.Options;
 using OpenTOY.Filters;
+using OpenTOY.Options;
 
 namespace OpenTOY.Endpoints;
 
 public class EnterToyEndpoint : Endpoint<EnterToyRequest, EnterToyResponse>
 {
+    private readonly IOptions<ServiceOptions> _serviceOptions;
+    
+    public EnterToyEndpoint(IOptions<ServiceOptions> serviceOptions)
+    {
+        _serviceOptions = serviceOptions;
+    }
+    
     public override void Configure()
     {
         Post("/sdk/enterToy.nx");
@@ -22,6 +31,14 @@ public class EnterToyEndpoint : Endpoint<EnterToyRequest, EnterToyResponse>
     {
         Logger.LogInformation("EnterToy - MNC: {MNC} MCC: {MCC} Params: {Params}", req.Mnc, req.Mcc, req.NpParams);
 
+        var serviceExists = _serviceOptions.Value.Services.TryGetValue(req.NpParams.SvcId, out var serviceInfo);
+        if (!serviceExists)
+        {
+            Logger.LogError("Service doesn't exist: {ServiceId}", req.NpParams.SvcId);
+            await SendNotFoundAsync();
+            return;
+        }
+
         var response = new EnterToyResponse
         {
             Result = new ToyEnterResult
@@ -29,10 +46,10 @@ public class EnterToyEndpoint : Endpoint<EnterToyRequest, EnterToyResponse>
                 Country = "FI",
                 Service = new ToyService
                 {
-                    Title = "Titanfall Frontline_Live",
+                    Title = serviceInfo!.Title,
                     LoginUiType = "1",
                     ClientId = "OTI3MzA2MDA4", // TODO: how to generate this?
-                    UseMemberships = [9999],
+                    UseMemberships = serviceInfo.LoginMethods,
                     UseMembershipsInfo = new Dictionary<string, string>
                     {
                         { "nexonNetSecretKey", "" },

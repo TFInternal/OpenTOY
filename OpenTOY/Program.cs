@@ -1,7 +1,15 @@
 using System.Text.Json;
 using FastEndpoints;
+using OpenTOY.Extensions;
+using OpenTOY.Options;
 
 var builder = WebApplication.CreateBuilder(args);
+var config = builder.Configuration;
+
+config.AddJsonFile("services.json", false, true);
+
+builder.Services
+    .AddConfiguredOptions<ServiceOptions>(config);
 
 builder.Services.AddHttpLogging(o =>
 {
