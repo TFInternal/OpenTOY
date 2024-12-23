@@ -1,4 +1,3 @@
-using System.Text;
 using OpenTOY.Utils;
 
 namespace OpenTOY.Filters;
@@ -27,15 +26,6 @@ public class UserDecryptionFilter : BaseDecryptionFilter
             return null;
         }
 
-        if (npsn.ToString().Length != 17)
-        {
-            return null;
-        }
-
-        var tmpkey = npsn.ToString()[2..];
-        var key = Crypto.Encrypt(Encoding.ASCII.GetBytes(tmpkey),
-            Encoding.ASCII.GetBytes(npsn.ToString()[1..]));
-        
-        return key;
+        return ToyCrypto.GetUserKey(npsn.ToString());
     }
 }

@@ -7,7 +7,7 @@ namespace OpenTOY.Extensions;
 
 public static class EndpointExtensions
 {
-    private static readonly JsonSerializerOptions SerializeOptions = new()
+    public static readonly JsonSerializerOptions SerializeOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };

@@ -1,0 +1,137 @@
+using System.Security.Claims;
+using System.Security.Principal;
+using System.Text;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Options;
+using OpenTOY.Extensions;
+using OpenTOY.Filters;
+using OpenTOY.Utils;
+
+namespace OpenTOY.Auth;
+
+public class TokenAuth : AuthenticationHandler<AuthenticationSchemeOptions>
+{
+    private readonly ITokenValidator _tokenValidator;
+    
+    public const string SchemeName = "Token";
+    
+    public TokenAuth(ITokenValidator tokenValidator, IOptionsMonitor<AuthenticationSchemeOptions> options,
+        ILoggerFactory logger, UrlEncoder encoder) : base(options, logger, encoder)
+    {
+        _tokenValidator = tokenValidator;
+    }
+
+    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+    {
+        if (IsPublicEndpoint())
+        {
+            return Task.FromResult(AuthenticateResult.NoResult());
+        }
+        
+        var keyError = GetKey(out var key, out var npParamsHeader);
+        if (keyError is not null)
+        {
+            return Task.FromResult(AuthenticateResult.Fail(keyError));
+        }
+        
+        var decryptedParams = Crypto.Decrypt(npParamsHeader!, key!);
+        var npParams = JsonSerializer.Deserialize<NpParams>(decryptedParams, EndpointExtensions.SerializeOptions);
+        if (npParams is null)
+        {
+            return Task.FromResult(AuthenticateResult.Fail("Invalid params"));
+        }
+
+        if (!_tokenValidator.IsValidToken(npParams.NpToken, out var jwt))
+        {
+            return Task.FromResult(AuthenticateResult.Fail("Invalid token"));
+        }
+
+        var identity = new ClaimsIdentity(jwt.Claims, SchemeName);
+        var principal = new GenericPrincipal(identity, null);
+        var ticket = new AuthenticationTicket(principal, SchemeName);
+
+        return Task.FromResult(AuthenticateResult.Success(ticket));
+    }
+
+    protected override async Task HandleChallengeAsync(AuthenticationProperties properties)
+    {
+        var keyError = GetKey(out var key, out _);
+        if (keyError is not null)
+        {
+            Response.StatusCode = StatusCodes.Status400BadRequest;
+            return;
+        }
+        
+        Response.StatusCode = StatusCodes.Status401Unauthorized;
+        Response.ContentType = "application/json";
+        
+        // {"errorCode":5001,"result":{},"errorText":"인증이 유효하지 않습니다.","errorDetail":""}
+        var response = new BaseResponse
+        {
+            ErrorCode = 5001,
+            ErrorText = "인증이 유효하지 않습니다.",
+            ErrorDetail = ""
+        };
+        
+        var json = JsonSerializer.Serialize(response, EndpointExtensions.SerializeOptions);
+        var encryptedJson = Crypto.Encrypt(Encoding.ASCII.GetBytes(json), key!);
+        
+        await Response.Body.WriteAsync(encryptedJson);
+    }
+
+    private string? GetKey(out byte[]? key, out string? npParams)
+    {
+        key = null;
+        npParams = null;
+        
+        var headerPresent = Request.Headers.TryGetValue(Constants.ParamsKey, out var npParamsHeader);
+        if (!headerPresent)
+        {
+            return "Params header not present";
+        }
+        
+        npParams = npParamsHeader.ToString();
+
+        if (IsCommonEncryption())
+        {
+            key = Encoding.ASCII.GetBytes(Constants.Key);
+        }
+        else
+        {
+            var npsnHeaderPresent = Request.Headers.TryGetValue("npsn", out var npsn);
+            if (!npsnHeaderPresent)
+            {
+                return "npsn header not present";
+            }
+            
+            var userKey = ToyCrypto.GetUserKey(npsn.ToString());
+            if (userKey is null)
+            {
+                return "Invalid npsn";
+            }
+            
+            key = userKey;
+        }
+
+        return null;
+    }
+
+    private bool IsPublicEndpoint()
+    {
+        return Context
+            .GetEndpoint()?
+            .Metadata.OfType<AllowAnonymousAttribute>()
+            .Any() is null or true;
+    }
+
+    private bool IsCommonEncryption()
+    {
+        return Context
+            .GetEndpoint()?
+            .Metadata.OfType<CommonDecryptionFilter>()
+            .Any() is true;
+    }
+}

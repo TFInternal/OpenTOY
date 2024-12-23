@@ -1,12 +1,22 @@
 using System.Text.Json.Serialization;
 using FastEndpoints;
+using FastEndpoints.Security;
+using Microsoft.Extensions.Options;
 using OpenTOY.Extensions;
 using OpenTOY.Filters;
+using OpenTOY.Options;
 
 namespace OpenTOY.Endpoints;
 
 public class SignInEndpoint : Endpoint<SignInRequest, SignInResponse>
 {
+    private readonly IOptions<JwtOptions> _jwtOptions;
+
+    public SignInEndpoint(IOptions<JwtOptions> jwtOptions)
+    {
+        _jwtOptions = jwtOptions;
+    }
+
     public override void Configure()
     {
         Post("/sdk/signIn.nx");
@@ -33,13 +43,21 @@ public class SignInEndpoint : Endpoint<SignInRequest, SignInResponse>
         var zerosToAdd = 17 - digitsServiceId - digitsUserId;
 
         var npsn = serviceId * (long) Math.Pow(10, zerosToAdd + digitsUserId) + userId;
+
+        var jwtToken = JwtBearer.CreateToken(o =>
+        {
+            o.SigningKey = _jwtOptions.Value.Key;
+            o.ExpireAt = DateTime.UtcNow.AddDays(7);
+            o.User["UserId"] = userId.ToString();
+            o.User["ServiceId"] = serviceId.ToString();
+        });
         
         var response = new SignInResponse
         {
             Result = new ToyLoginResult
             {
                 Id = npsn,
-                Token = "wow"
+                Token = jwtToken
             }
         };
 

@@ -5,19 +5,17 @@ namespace OpenTOY.Filters;
 
 public abstract class BaseDecryptionFilter : IEndpointFilter
 {
-    private const string ParamsKey = "npparams";
-    
     public abstract ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next);
     
     protected void DecryptParams(HttpRequest request, byte[] key)
     {
-        if (!request.Headers.TryGetValue(ParamsKey, out var npParams))
+        if (!request.Headers.TryGetValue(Constants.ParamsKey, out var npParams))
         {
             return;
         }
         
         var decrypted = Crypto.Decrypt(npParams.ToString(), key);
-        request.Headers[ParamsKey] = decrypted;
+        request.Headers[Constants.ParamsKey] = decrypted;
     }
 
     protected async Task DecryptRequest(HttpRequest request, byte[] key)

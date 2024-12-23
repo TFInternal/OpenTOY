@@ -10,7 +10,6 @@ public class GetUserInfoEndpoint : Endpoint<GetUserInfoRequest, GetUserInfoRespo
     public override void Configure()
     {
         Post("/sdk/getUserInfo.nx");
-        AllowAnonymous(); // TODO: temporary
         AllowFormData(true);
         Options(x =>
         {
