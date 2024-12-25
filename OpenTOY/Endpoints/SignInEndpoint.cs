@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using FastEndpoints;
-using FastEndpoints.Security;
 using Microsoft.Extensions.Options;
+using OpenTOY.Data.Entities;
 using OpenTOY.Extensions;
 using OpenTOY.Filters;
 using OpenTOY.Options;
@@ -15,15 +15,11 @@ public class SignInEndpoint : Endpoint<SignInRequest, SignInResponse>
     private readonly IAccountService _accountService;
     
     private readonly IOptions<ServiceOptions> _serviceOptions;
-    
-    private readonly IOptions<JwtOptions> _jwtOptions;
 
-    public SignInEndpoint(IAccountService accountService, IOptions<ServiceOptions> serviceOptions,
-        IOptions<JwtOptions> jwtOptions)
+    public SignInEndpoint(IAccountService accountService, IOptions<ServiceOptions> serviceOptions)
     {
         _accountService = accountService;
         _serviceOptions = serviceOptions;
-        _jwtOptions = jwtOptions;
     }
 
     public override void Configure()
@@ -52,24 +48,45 @@ public class SignInEndpoint : Endpoint<SignInRequest, SignInResponse>
             return;
         }
 
-        var user = await _accountService.GetOrCreateUserAsync(req);
+        UserEntity? user = null;
+        if (req.MemType == (int) MembershipType.Email)
+        {
+            var (userEntity, error) = await _accountService.SignInEmailAsync(req);
+            user = userEntity;
+            
+            if (error is not null)
+            {
+                var errorResponse = new SignInResponse
+                {
+                    ErrorCode = 1,
+                    ErrorText = error,
+                    Result = new ToyLoginResult()
+                };
+                
+                await this.SendCommonEncryptedAsync(errorResponse);
+                return;
+            }
+        }
+        else if (req.MemType == (int) MembershipType.Guest)
+        {
+            user = await _accountService.GetOrCreateGuestAsync(req);
+        }
+        
+        if (user is null)
+        {
+            await SendNotFoundAsync();
+            return;
+        }
+        
         var serviceId = user.ServiceId;
         var userId = user.Id;
-
-        var jwtToken = JwtBearer.CreateToken(o =>
-        {
-            o.SigningKey = _jwtOptions.Value.Key;
-            o.ExpireAt = DateTime.UtcNow.AddDays(7);
-            o.User["UserId"] = userId.ToString();
-            o.User["ServiceId"] = serviceId.ToString();
-        });
         
         var response = new SignInResponse
         {
             Result = new ToyLoginResult
             {
                 Id = ToyUser.GenerateNpsn(serviceId, userId),
-                Token = jwtToken
+                Token = _accountService.GenerateJwtToken(serviceId, userId)
             }
         };
 
@@ -82,7 +99,6 @@ public class SignInRequest : BaseRequest
     public string Uuid2 { get; set; } = string.Empty;
     // Contains the email address
     public string? UserId { get; set; }
-    // When logging in with an email, this will be encrypted
     public string Passwd { get; set; } = string.Empty;
     public int MemType { get; set; }
     [JsonPropertyName("optional")]

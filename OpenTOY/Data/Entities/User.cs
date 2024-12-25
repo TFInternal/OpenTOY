@@ -13,6 +13,21 @@ public class UserEntity
     public MembershipType MembershipType { get; set; }
 }
 
+[PrimaryKey(nameof(ServiceId), nameof(Email))]
+public class EmailAccountEntity
+{
+    public int Id { get; set; }
+    public int ServiceId { get; set; }
+    [ForeignKey("Id,ServiceId")]
+    public UserEntity? User { get; set; }
+    [MaxLength(255)]
+    public string Email { get; set; } = string.Empty;
+    [MaxLength(255)]
+    public string Password { get; set; } = string.Empty;
+    [MaxLength(255)]
+    public string Salt { get; set; } = string.Empty;
+}
+
 [PrimaryKey(nameof(ServiceId), nameof(DeviceId))]
 public class GuestAccountEntity
 {

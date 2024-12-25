@@ -28,8 +28,10 @@ builder.Services.AddDbContext<AppDb>(o =>
 });
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IEmailAccountRepository, EmailAccountRepository>();
 builder.Services.AddScoped<IGuestAccountRepository, GuestAccountRepository>();
 
+builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 
 builder.Services.AddHttpLogging(o =>
