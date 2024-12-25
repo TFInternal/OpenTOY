@@ -9,6 +9,12 @@
     <ItemGroup>
       <PackageReference Include="FastEndpoints" Version="5.32.0" />
       <PackageReference Include="FastEndpoints.Security" Version="5.32.0" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0-preview.2.efcore.9.0.0" />
     </ItemGroup>
 
 </Project>

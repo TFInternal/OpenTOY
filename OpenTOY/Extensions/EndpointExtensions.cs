@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using FastEndpoints;
+using FastEndpoints.Security;
 using OpenTOY.Utils;
 
 namespace OpenTOY.Extensions;
@@ -49,5 +50,15 @@ public static class EndpointExtensions
         await stream.WriteAsync(encryptedJson, cancellationToken);
         stream.Position = 0;
         await stream.CopyToAsync(ep.HttpContext.Response.Body, cancellationToken);
+    }
+
+    public static int GetUserId(this IEndpoint ep)
+    {
+        return int.Parse(ep.HttpContext.User.ClaimValue("UserId")!);
+    }
+    
+    public static int GetServiceId(this IEndpoint ep)
+    {
+        return int.Parse(ep.HttpContext.User.ClaimValue("ServiceId")!);
     }
 }

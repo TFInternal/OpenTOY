@@ -5,15 +5,24 @@ using Microsoft.Extensions.Options;
 using OpenTOY.Extensions;
 using OpenTOY.Filters;
 using OpenTOY.Options;
+using OpenTOY.Services;
+using OpenTOY.Utils;
 
 namespace OpenTOY.Endpoints;
 
 public class SignInEndpoint : Endpoint<SignInRequest, SignInResponse>
 {
+    private readonly IAccountService _accountService;
+    
+    private readonly IOptions<ServiceOptions> _serviceOptions;
+    
     private readonly IOptions<JwtOptions> _jwtOptions;
 
-    public SignInEndpoint(IOptions<JwtOptions> jwtOptions)
+    public SignInEndpoint(IAccountService accountService, IOptions<ServiceOptions> serviceOptions,
+        IOptions<JwtOptions> jwtOptions)
     {
+        _accountService = accountService;
+        _serviceOptions = serviceOptions;
         _jwtOptions = jwtOptions;
     }
 
@@ -35,14 +44,17 @@ public class SignInEndpoint : Endpoint<SignInRequest, SignInResponse>
         Logger.LogInformation("SignIn - Device: {DeviceType} UUID2: {Uuid2}, UserId: {UserId}, Passwd: {Passwd}, MemType: {MemType} Params: {Params}",
             req.DeviceInfo.Device, req.Uuid2, req.UserId, req.Passwd, req.MemType, req.NpParams);
 
-        var serviceId = int.Parse(req.NpParams.SvcId);
-        var userId = 10;
+        var serviceExists = _serviceOptions.Value.Services.TryGetValue(req.NpParams.SvcId, out _);
+        if (!serviceExists)
+        {
+            Logger.LogError("Service doesn't exist: {ServiceId}", req.NpParams.SvcId);
+            await SendNotFoundAsync();
+            return;
+        }
 
-        var digitsServiceId = (int) Math.Log10(serviceId) + 1;
-        var digitsUserId = (int) Math.Log10(userId) + 1;
-        var zerosToAdd = 17 - digitsServiceId - digitsUserId;
-
-        var npsn = serviceId * (long) Math.Pow(10, zerosToAdd + digitsUserId) + userId;
+        var user = await _accountService.GetOrCreateUserAsync(req);
+        var serviceId = user.ServiceId;
+        var userId = user.Id;
 
         var jwtToken = JwtBearer.CreateToken(o =>
         {
@@ -56,7 +68,7 @@ public class SignInEndpoint : Endpoint<SignInRequest, SignInResponse>
         {
             Result = new ToyLoginResult
             {
-                Id = npsn,
+                Id = ToyUser.GenerateNpsn(serviceId, userId),
                 Token = jwtToken
             }
         };
@@ -68,7 +80,9 @@ public class SignInEndpoint : Endpoint<SignInRequest, SignInResponse>
 public class SignInRequest : BaseRequest
 {
     public string Uuid2 { get; set; } = string.Empty;
+    // Contains the email address
     public string? UserId { get; set; }
+    // When logging in with an email, this will be encrypted
     public string Passwd { get; set; } = string.Empty;
     public int MemType { get; set; }
     [JsonPropertyName("optional")]

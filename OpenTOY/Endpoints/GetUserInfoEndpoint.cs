@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using FastEndpoints;
+using OpenTOY.Data.Repositories;
 using OpenTOY.Extensions;
 using OpenTOY.Filters;
 
@@ -7,6 +8,13 @@ namespace OpenTOY.Endpoints;
 
 public class GetUserInfoEndpoint : Endpoint<GetUserInfoRequest, GetUserInfoResponse>
 {
+    private readonly IUserRepository _userRepository;
+
+    public GetUserInfoEndpoint(IUserRepository userRepository)
+    {
+        _userRepository = userRepository;
+    }
+
     public override void Configure()
     {
         Post("/sdk/getUserInfo.nx");
@@ -24,6 +32,15 @@ public class GetUserInfoEndpoint : Endpoint<GetUserInfoRequest, GetUserInfoRespo
         Logger.LogInformation("GetUserInfo - ID: {Id} AdvertisingId: {AdvertisingId} Params: {Params}",
             req.Id, req.AdvertisingId, req.NpParams);
 
+        var userId = this.GetUserId();
+        var serviceId = this.GetServiceId();
+        var user = await _userRepository.GetByIdAsync(userId, serviceId);
+        if (user is null)
+        {
+            await SendNotFoundAsync();
+            return;
+        }
+
         var response = new GetUserInfoResponse
         {
             Result = new UserInfoResult
@@ -31,7 +48,7 @@ public class GetUserInfoEndpoint : Endpoint<GetUserInfoRequest, GetUserInfoRespo
                 DoToast = true,
                 NpsnUserInfo = new ToyUserInfo
                 {
-                    MemType = 9999
+                    MemType = (int) user.MembershipType
                 },
                 PushAgree = 1
             }
