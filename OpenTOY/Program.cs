@@ -1,6 +1,7 @@
 using System.Text.Json;
 using FastEndpoints;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.EntityFrameworkCore;
 using OpenTOY.Auth;
 using OpenTOY.Data;
@@ -36,6 +37,11 @@ builder.Services.AddScoped<IAccountService, AccountService>();
 
 builder.Services.AddHttpLogging(o =>
 {
+    if (builder.Environment.IsDevelopment())
+    {
+        o.LoggingFields = HttpLoggingFields.All;
+    }
+    
     o.RequestHeaders.Add("acceptCountry");
     o.RequestHeaders.Add("acceptLanguage");
     o.RequestHeaders.Add("uuid");
