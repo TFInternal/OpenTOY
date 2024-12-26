@@ -2,6 +2,7 @@ using System.Text.Json;
 using FastEndpoints;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.HttpLogging;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using OpenTOY.Auth;
 using OpenTOY.Data;
@@ -64,6 +65,11 @@ if (app.Environment.IsProduction())
     var db = scope.ServiceProvider.GetRequiredService<AppDb>();
     db.Database.Migrate();
 }
+
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor
+});
 
 app.UseHttpLogging();
 
