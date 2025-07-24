@@ -12,6 +12,6 @@ public class IndexEndpoint : EndpointWithoutRequest
     
     public override async Task HandleAsync(CancellationToken ct)
     {
-        await SendStringAsync("Welcome to OpenTOY!");
+        await Send.StringAsync("Welcome to OpenTOY!");
     }
 }

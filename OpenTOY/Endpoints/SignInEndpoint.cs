@@ -44,7 +44,7 @@ public class SignInEndpoint : Endpoint<SignInRequest, SignInResponse>
         if (!serviceExists)
         {
             Logger.LogError("Service doesn't exist: {ServiceId}", req.NpParams.SvcId);
-            await SendNotFoundAsync();
+            await Send.NotFoundAsync();
             return;
         }
 
@@ -74,7 +74,7 @@ public class SignInEndpoint : Endpoint<SignInRequest, SignInResponse>
         
         if (user is null)
         {
-            await SendNotFoundAsync();
+            await Send.NotFoundAsync();
             return;
         }
         

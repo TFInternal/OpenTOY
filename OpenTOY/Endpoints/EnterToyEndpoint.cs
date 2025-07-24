@@ -35,7 +35,7 @@ public class EnterToyEndpoint : Endpoint<EnterToyRequest, EnterToyResponse>
         if (!serviceExists)
         {
             Logger.LogError("Service doesn't exist: {ServiceId}", req.NpParams.SvcId);
-            await SendNotFoundAsync();
+            await Send.NotFoundAsync();
             return;
         }
 
@@ -60,7 +60,7 @@ public class EnterToyEndpoint : Endpoint<EnterToyRequest, EnterToyResponse>
             }
         };
 
-        await SendAsync(response);
+        await Send.OkAsync(response);
     }
 }
 

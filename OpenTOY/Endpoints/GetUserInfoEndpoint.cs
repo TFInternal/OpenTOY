@@ -37,7 +37,7 @@ public class GetUserInfoEndpoint : Endpoint<GetUserInfoRequest, GetUserInfoRespo
         var user = await _userRepository.GetByIdAsync(userId, serviceId);
         if (user is null)
         {
-            await SendNotFoundAsync();
+            await Send.NotFoundAsync();
             return;
         }
 

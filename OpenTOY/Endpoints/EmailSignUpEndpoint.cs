@@ -43,7 +43,7 @@ public class EmailSignUpEndpoint : Endpoint<EmailSignUpRequest, EmailSignUpRespo
         if (!serviceExists)
         {
             Logger.LogError("Service doesn't exist: {ServiceId}", req.NpParams.SvcId);
-            await SendNotFoundAsync();
+            await Send.NotFoundAsync();
             return;
         }
         

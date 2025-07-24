@@ -31,7 +31,7 @@ public class VerifyUserEndpoint : Endpoint<VerifyUserRequest>
         if (!_tokenValidator.IsValidToken(req.Password, out var jwt))
         {
             Logger.LogWarning("Invalid token for user {UserId}", req.Id);
-            await SendUnauthorizedAsync();
+            await Send.UnauthorizedAsync();
             return;
         }
         
@@ -41,7 +41,7 @@ public class VerifyUserEndpoint : Endpoint<VerifyUserRequest>
         if (!_serviceOptions.Value.Services.ContainsKey(serviceId))
         {
             Logger.LogError("Token was valid but service doesn't exist: {ServiceId}", serviceId);
-            await SendNotFoundAsync();
+            await Send.NotFoundAsync();
             return;
         }
         
@@ -49,7 +49,7 @@ public class VerifyUserEndpoint : Endpoint<VerifyUserRequest>
         
         Logger.LogInformation("User {UserId} has a valid token", userId);
 
-        await SendOkAsync();
+        await Send.OkAsync();
     }
 }
 
