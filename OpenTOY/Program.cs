@@ -26,7 +26,7 @@ var connectionString = config.GetConnectionString("connection");
 
 builder.Services.AddDbContext<AppDb>(o =>
 {
-    o.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+    o.UseNpgsql(connectionString);
 });
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
