@@ -67,9 +67,13 @@ public class EnterToyEndpoint : Endpoint<EnterToyRequest, EnterToyResponse>
 
 public class EnterToyRequest : BaseRequest
 {
-    // Mobile network code. For example, 05 for Elisa.
+    /// <summary>
+    /// Mobile network code. For example, 05 for Elisa.
+    /// </summary>
     public int Mnc { get; set; }
-    // Mobile country code. For example, 244 for Finland.
+    /// <summary>
+    /// Mobile country code. For example, 244 for Finland.
+    /// </summary>
     public int Mcc { get; set; }
 }
 

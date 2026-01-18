@@ -1,18 +1,23 @@
 using FastEndpoints;
 using Microsoft.Extensions.Options;
 using OpenTOY.Auth;
+using OpenTOY.Data.Repositories;
 using OpenTOY.Options;
 
 namespace OpenTOY.Endpoints.GameServer;
 
 public class VerifyUserEndpoint : Endpoint<VerifyUserRequest>
 {
+    private readonly IUserRepository _userRepository;
+
     private readonly ITokenValidator _tokenValidator;
     
     private readonly IOptions<ServiceOptions> _serviceOptions;
 
-    public VerifyUserEndpoint(ITokenValidator tokenValidator, IOptions<ServiceOptions> serviceOptions)
+    public VerifyUserEndpoint(IUserRepository userRepository, ITokenValidator tokenValidator,
+        IOptions<ServiceOptions> serviceOptions)
     {
+        _userRepository = userRepository;
         _tokenValidator = tokenValidator;
         _serviceOptions = serviceOptions;
     }
@@ -44,9 +49,15 @@ public class VerifyUserEndpoint : Endpoint<VerifyUserRequest>
             await Send.NotFoundAsync();
             return;
         }
-        
-        // TODO: verify the user exists in the database
-        
+
+        var user = await _userRepository.GetByIdAsync(int.Parse(userId), int.Parse(serviceId));
+        if (user is null)
+        {
+            Logger.LogWarning("Token was valid but user {UserId} doesn't exist", userId);
+            await Send.NotFoundAsync();
+            return;
+        }
+
         Logger.LogInformation("User {UserId} has a valid token", userId);
 
         await Send.OkAsync();

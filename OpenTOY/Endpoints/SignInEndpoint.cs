@@ -57,6 +57,9 @@ public class SignInEndpoint : Endpoint<SignInRequest, SignInResponse>
             
             if (error is not null)
             {
+                Logger.LogWarning("Sign in failed for UserId: {UserId}. Error: {Error}",
+                    req.UserId, error);
+
                 var errorResponse = new SignInResponse
                 {
                     ErrorCode = 1,
@@ -75,6 +78,8 @@ public class SignInEndpoint : Endpoint<SignInRequest, SignInResponse>
         
         if (user is null)
         {
+            Logger.LogError("User not found after sign in attempt. MemType: {MemType}, UserId: {UserId}",
+                req.MemType, req.UserId);
             await Send.NotFoundAsync();
             return;
         }
