@@ -30,6 +30,12 @@ public class NpParams
 
     public override string ToString()
     {
-        return $"[Version: {SdkVer}, OS: {Os}, Service: {SvcId}, NpToken: {NpToken}]";
+        return ToString();
+    }
+
+    public string ToString(bool redact = false)
+    {
+        var npToken = redact ? "[REDACTED]" : NpToken;
+        return $"[Version: {SdkVer}, OS: {Os}, Service: {SvcId}, NpToken: {npToken}]";
     }
 }

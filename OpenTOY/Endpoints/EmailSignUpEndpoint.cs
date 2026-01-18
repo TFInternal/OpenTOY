@@ -36,8 +36,9 @@ public class EmailSignUpEndpoint : Endpoint<EmailSignUpRequest, EmailSignUpRespo
 
     public override async Task HandleAsync(EmailSignUpRequest req, CancellationToken ct)
     {
+        var passwd = Env.IsProduction() ? "[REDACTED]" : req.Passwd;
         Logger.LogInformation("EmailSignUp - UUID2: {Uuid2}, Email: {Email}, Passwd: {Passwd} Params: {Params}",
-            req.Uuid2, req.Email, req.Passwd, req.NpParams);
+            req.Uuid2, req.Email, passwd, req.NpParams.ToString(true));
         
         var serviceExists = _serviceOptions.Value.Services.TryGetValue(req.NpParams.SvcId, out _);
         if (!serviceExists)
