@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using FastEndpoints;
 using Microsoft.Extensions.Options;
+using OpenTOY.Attributes;
 using OpenTOY.Extensions;
 using OpenTOY.Filters;
 using OpenTOY.Options;
@@ -8,6 +9,7 @@ using OpenTOY.Services;
 
 namespace OpenTOY.Endpoints;
 
+[CommonEncryption]
 public class ResetEmailPasswordEndpoint : Endpoint<ResetEmailPasswordRequest, ResetEmailPasswordResponse>
 {
     private readonly IAccountService _accountService;

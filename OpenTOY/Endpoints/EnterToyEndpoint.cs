@@ -1,10 +1,12 @@
 using FastEndpoints;
 using Microsoft.Extensions.Options;
+using OpenTOY.Attributes;
 using OpenTOY.Filters;
 using OpenTOY.Options;
 
 namespace OpenTOY.Endpoints;
 
+[CommonEncryption]
 public class EnterToyEndpoint : Endpoint<EnterToyRequest, EnterToyResponse>
 {
     private readonly IOptions<ServiceOptions> _serviceOptions;

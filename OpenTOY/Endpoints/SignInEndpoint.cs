@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using FastEndpoints;
 using Microsoft.Extensions.Options;
+using OpenTOY.Attributes;
 using OpenTOY.Data.Entities;
 using OpenTOY.Extensions;
 using OpenTOY.Filters;
@@ -10,6 +11,7 @@ using OpenTOY.Utils;
 
 namespace OpenTOY.Endpoints;
 
+[CommonEncryption]
 public class SignInEndpoint : Endpoint<SignInRequest, SignInResponse>
 {
     private readonly IAccountService _accountService;

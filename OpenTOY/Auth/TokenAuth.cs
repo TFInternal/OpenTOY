@@ -3,11 +3,12 @@ using System.Security.Principal;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using FastEndpoints;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
+using OpenTOY.Attributes;
 using OpenTOY.Extensions;
-using OpenTOY.Filters;
 using OpenTOY.Utils;
 
 namespace OpenTOY.Auth;
@@ -129,9 +130,13 @@ public class TokenAuth : AuthenticationHandler<AuthenticationSchemeOptions>
 
     private bool IsCommonEncryption()
     {
-        return Context
+        var epDefinition = Context
             .GetEndpoint()?
-            .Metadata.OfType<CommonDecryptionFilter>()
+            .Metadata.OfType<EndpointDefinition>()
+            .FirstOrDefault();
+
+        return epDefinition?.EndpointAttributes?
+            .OfType<CommonEncryptionAttribute>()
             .Any() is true;
     }
 }
