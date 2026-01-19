@@ -31,15 +31,30 @@ public class TokenAuth : AuthenticationHandler<AuthenticationSchemeOptions>
         {
             return Task.FromResult(AuthenticateResult.NoResult());
         }
-        
-        var keyError = GetKey(out var key, out var npParamsHeader);
-        if (keyError is not null)
+
+        string jsonParams;
+
+        if (IsNoEncryption())
         {
-            return Task.FromResult(AuthenticateResult.Fail(keyError));
+            if (!Request.Headers.TryGetValue(Constants.ParamsKey, out var npParamsHeader))
+            {
+                return Task.FromResult(AuthenticateResult.Fail("Params header not present"));
+            }
+
+            jsonParams = Crypto.HexStringToAscii(npParamsHeader.ToString());
         }
-        
-        var decryptedParams = Crypto.Decrypt(npParamsHeader!, key!);
-        var npParams = JsonSerializer.Deserialize<NpParams>(decryptedParams, EndpointExtensions.SerializeOptions);
+        else
+        {
+            var keyError = GetKey(out var key, out var npParamsHeader);
+            if (keyError is not null)
+            {
+                return Task.FromResult(AuthenticateResult.Fail(keyError));
+            }
+
+            jsonParams = Crypto.Decrypt(npParamsHeader!, key!);
+        }
+
+        var npParams = JsonSerializer.Deserialize<NpParams>(jsonParams, EndpointExtensions.SerializeOptions);
         if (npParams is null)
         {
             return Task.FromResult(AuthenticateResult.Fail("Invalid params"));
@@ -59,16 +74,9 @@ public class TokenAuth : AuthenticationHandler<AuthenticationSchemeOptions>
 
     protected override async Task HandleChallengeAsync(AuthenticationProperties properties)
     {
-        var keyError = GetKey(out var key, out _);
-        if (keyError is not null)
-        {
-            Response.StatusCode = StatusCodes.Status400BadRequest;
-            return;
-        }
-        
         Response.StatusCode = StatusCodes.Status401Unauthorized;
         Response.ContentType = "application/json";
-        
+
         // {"errorCode":5001,"result":{},"errorText":"인증이 유효하지 않습니다.","errorDetail":""}
         var response = new BaseResponse
         {
@@ -76,11 +84,27 @@ public class TokenAuth : AuthenticationHandler<AuthenticationSchemeOptions>
             ErrorText = "인증이 유효하지 않습니다.",
             ErrorDetail = ""
         };
-        
+
         var json = JsonSerializer.Serialize(response, EndpointExtensions.SerializeOptions);
-        var encryptedJson = Crypto.Encrypt(Encoding.ASCII.GetBytes(json), key!);
-        
-        await Response.Body.WriteAsync(encryptedJson);
+        byte[] responseBytes;
+
+        if (IsNoEncryption())
+        {
+            responseBytes = Encoding.UTF8.GetBytes(json);
+        }
+        else
+        {
+            var keyError = GetKey(out var key, out _);
+            if (keyError is not null)
+            {
+                Response.StatusCode = StatusCodes.Status400BadRequest;
+                return;
+            }
+
+            responseBytes = Crypto.Encrypt(Encoding.ASCII.GetBytes(json), key!);
+        }
+
+        await Response.Body.WriteAsync(responseBytes);
     }
 
     private string? GetKey(out byte[]? key, out string? npParams)
@@ -118,6 +142,18 @@ public class TokenAuth : AuthenticationHandler<AuthenticationSchemeOptions>
         }
 
         return null;
+    }
+
+    private bool IsNoEncryption()
+    {
+        var epDefinition = Context
+            .GetEndpoint()?
+            .Metadata.OfType<EndpointDefinition>()
+            .FirstOrDefault();
+
+        return epDefinition?.EndpointAttributes?
+            .OfType<NoEncryptionAttribute>()
+            .Any() is true;
     }
 
     private bool IsPublicEndpoint()

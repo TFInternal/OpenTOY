@@ -6,6 +6,7 @@ namespace OpenTOY.Data.Repositories;
 public interface IEmailAccountRepository : IRepository<EmailAccountEntity>
 {
     Task<EmailAccountEntity?> GetByEmailAsync(int serviceId, string email);
+    Task<EmailAccountEntity?> GetByIdAsync(int serviceId, int userId);
     Task<bool> CheckEmailRegisteredAsync(int serviceId, string email);
 }
 
@@ -20,6 +21,13 @@ public class EmailAccountRepository : RepositoryBase<EmailAccountEntity>, IEmail
         return await Db.EmailAccounts
             .Include(ea => ea.User)
             .FirstOrDefaultAsync(ea => ea.ServiceId == serviceId && ea.Email == email);
+    }
+
+    public async Task<EmailAccountEntity?> GetByIdAsync(int serviceId, int userId)
+    {
+        return await Db.EmailAccounts
+            .Include(ea => ea.User)
+            .FirstOrDefaultAsync(ea => ea.ServiceId == serviceId && ea.Id == userId);
     }
 
     public async Task<bool> CheckEmailRegisteredAsync(int serviceId, string email)

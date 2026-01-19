@@ -49,4 +49,10 @@ public static class Crypto
         
         return bytes;
     }
+
+    public static string HexStringToAscii(string hex)
+    {
+        var bytes = HexStringToByteArray(hex);
+        return Encoding.ASCII.GetString(bytes);
+    }
 }
