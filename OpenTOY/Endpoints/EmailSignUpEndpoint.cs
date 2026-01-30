@@ -40,7 +40,7 @@ public class EmailSignUpEndpoint : Endpoint<EmailSignUpRequest, EmailSignUpRespo
     {
         var passwd = Env.IsProduction() ? "[REDACTED]" : req.Passwd;
         Logger.LogInformation("EmailSignUp - UUID2: {Uuid2}, Email: {Email}, Passwd: {Passwd} Params: {Params}",
-            req.Uuid2, req.Email, passwd, req.NpParams.ToString(true));
+            req.Uuid2, req.Email, passwd, req.NpParams.ToString(Env.IsProduction()));
         
         var serviceExists = _serviceOptions.Value.Services.TryGetValue(req.NpParams.SvcId, out _);
         if (!serviceExists)

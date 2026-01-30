@@ -41,7 +41,7 @@ public class SignInEndpoint : Endpoint<SignInRequest, SignInResponse>
     {
         var passwd = Env.IsProduction() ? "[REDACTED]" : req.Passwd;
         Logger.LogInformation("SignIn - Device: {DeviceType} UUID2: {Uuid2}, UserId: {UserId}, Passwd: {Passwd}, MemType: {MemType} Params: {Params}",
-            req.DeviceInfo.Device, req.Uuid2, req.UserId, passwd, req.MemType, req.NpParams.ToString(true));
+            req.DeviceInfo.Device, req.Uuid2, req.UserId, passwd, req.MemType, req.NpParams.ToString(Env.IsProduction()));
 
         var serviceExists = _serviceOptions.Value.Services.TryGetValue(req.NpParams.SvcId, out _);
         if (!serviceExists)

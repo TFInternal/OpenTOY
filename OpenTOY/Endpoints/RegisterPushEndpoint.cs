@@ -23,7 +23,7 @@ public class RegisterPushEndpoint : Endpoint<RegisterPushRequest>
     public override async Task HandleAsync(RegisterPushRequest req, CancellationToken ct)
     {
         Logger.LogInformation("RegisterPush - ID: {Id} PushKey: {PushKey} Params: {Params}",
-            req.Id, req.PushKey, req.NpParams.ToString(true));
+            req.Id, req.PushKey, req.NpParams.ToString(Env.IsProduction()));
 
         await Send.OkAsync();
     }

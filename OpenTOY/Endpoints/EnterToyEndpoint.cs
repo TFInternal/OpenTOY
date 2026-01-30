@@ -32,7 +32,7 @@ public class EnterToyEndpoint : Endpoint<EnterToyRequest, EnterToyResponse>
     public override async Task HandleAsync(EnterToyRequest req, CancellationToken ct)
     {
         Logger.LogInformation("EnterToy - MNC: {MNC} MCC: {MCC} Params: {Params}",
-            req.Mnc, req.Mcc, req.NpParams.ToString(true));
+            req.Mnc, req.Mcc, req.NpParams.ToString(Env.IsProduction()));
 
         var serviceExists = _serviceOptions.Value.Services.TryGetValue(req.NpParams.SvcId, out var serviceInfo);
         if (!serviceExists)

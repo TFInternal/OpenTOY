@@ -31,7 +31,7 @@ public class GetEmailUserInfoEndpoint : Endpoint<GetEmailUserInfoRequest, GetEma
     public override async Task HandleAsync(GetEmailUserInfoRequest req, CancellationToken ct)
     {
         Logger.LogInformation("GetEmailUserInfo - ID: {Id} Params: {Params}",
-            req.Id, req.NpParams.ToString(true));
+            req.Id, req.NpParams.ToString(Env.IsProduction()));
 
         var userId = this.GetUserId();
         var serviceId = this.GetServiceId();
