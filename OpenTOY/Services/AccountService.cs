@@ -9,7 +9,7 @@ namespace OpenTOY.Services;
 
 public interface IAccountService
 {
-    Task<UserEntity> GetOrCreateGuestAsync(SignInRequest req);
+    Task<UserEntity?> GetOrCreateGuestAsync(SignInRequest req);
     Task<(UserEntity? user, string? error)> SignInEmailAsync(SignInRequest req);
     Task<UserEntity> CreateEmailAccountAsync(int serviceId, string email, string password);
     Task<bool> CheckEmailRegisteredAsync(int serviceId, string email);
@@ -18,6 +18,8 @@ public interface IAccountService
 
 public class AccountService : IAccountService
 {
+    private readonly ILogger<AccountService> _logger;
+
     private readonly IPasswordService _passwordService;
     
     private readonly IUserRepository _userRepository;
@@ -28,10 +30,11 @@ public class AccountService : IAccountService
     
     private readonly IOptions<JwtOptions> _jwtOptions;
 
-    public AccountService(IPasswordService passwordService, IUserRepository userRepository,
-        IEmailAccountRepository emailAccountRepository, IGuestAccountRepository guestAccountRepository,
-        IOptions<JwtOptions> jwtOptions)
+    public AccountService(ILogger<AccountService> logger, IPasswordService passwordService,
+        IUserRepository userRepository, IEmailAccountRepository emailAccountRepository,
+        IGuestAccountRepository guestAccountRepository, IOptions<JwtOptions> jwtOptions)
     {
+        _logger = logger;
         _passwordService = passwordService;
         _userRepository = userRepository;
         _emailAccountRepository = emailAccountRepository;
@@ -39,12 +42,17 @@ public class AccountService : IAccountService
         _jwtOptions = jwtOptions;
     }
 
-    public async Task<UserEntity> GetOrCreateGuestAsync(SignInRequest req)
+    public async Task<UserEntity?> GetOrCreateGuestAsync(SignInRequest req)
     {
         var serviceId = int.Parse(req.NpParams.SvcId);
-        
         var deviceId = req.Uuid2;
-        
+
+        if (deviceId.Length != 16 && deviceId.Length != 36)
+        {
+            _logger.LogWarning("Invalid device ID length for guest account: {DeviceId}", deviceId);
+            return null;
+        }
+
         var guestAccountEntity = await _guestAccountRepository.GetByIdAsync(serviceId, deviceId);
         if (guestAccountEntity is not null)
         {

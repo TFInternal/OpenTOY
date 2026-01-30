@@ -36,8 +36,8 @@ public class GuestAccountEntity
     [ForeignKey("Id,ServiceId")]
     public UserEntity? User { get; set; }
     // On Android, this is https://developer.android.com/reference/android/provider/Settings.Secure#ANDROID_ID
-    // I don't know what TOY uses on iOS so the length may need to be adjusted
-    [MaxLength(16)]
+    // On iOS, this is https://developer.apple.com/documentation/uikit/uidevice/identifierforvendor
+    [MaxLength(36)]
     public string DeviceId { get; set; } = string.Empty;
 }
 
