@@ -135,7 +135,7 @@ public class AccountService : IAccountService
         var jwtToken = JwtBearer.CreateToken(o =>
         {
             o.SigningKey = _jwtOptions.Value.Key;
-            o.ExpireAt = DateTime.UtcNow.AddMonths(6);
+            o.ExpireAt = DateTime.UtcNow.AddYears(5);
             o.User["UserId"] = userId.ToString();
             o.User["ServiceId"] = serviceId.ToString();
         });
