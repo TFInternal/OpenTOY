@@ -14,9 +14,9 @@ namespace OpenTOY.Endpoints;
 public class EmailSignUpEndpoint : Endpoint<EmailSignUpRequest, EmailSignUpResponse>
 {
     private readonly IAccountService _accountService;
-    
+
     private readonly IOptions<ServiceOptions> _serviceOptions;
-    
+
     public EmailSignUpEndpoint(IAccountService accountService, IOptions<ServiceOptions> serviceOptions)
     {
         _accountService = accountService;
@@ -49,7 +49,20 @@ public class EmailSignUpEndpoint : Endpoint<EmailSignUpRequest, EmailSignUpRespo
             await Send.NotFoundAsync();
             return;
         }
-        
+
+        if (!_accountService.IsValidEmail(req.Email))
+        {
+            var invalidEmailResponse = new EmailSignUpResponse
+            {
+                ErrorCode = 1,
+                ErrorText = "Invalid email",
+                Result = new ToyLoginResult()
+            };
+
+            await this.SendCommonEncryptedAsync(invalidEmailResponse);
+            return;
+        }
+
         var serviceId = int.Parse(req.NpParams.SvcId);
         var email = req.Email.ToLower();
         

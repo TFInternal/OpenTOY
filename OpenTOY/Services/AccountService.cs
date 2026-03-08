@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using FastEndpoints.Security;
 using Microsoft.Extensions.Options;
 using OpenTOY.Data.Entities;
@@ -14,9 +15,10 @@ public interface IAccountService
     Task<UserEntity> CreateEmailAccountAsync(int serviceId, string email, string password);
     Task<bool> CheckEmailRegisteredAsync(int serviceId, string email);
     string GenerateJwtToken(int serviceId, int userId);
+    bool IsValidEmail(string email);
 }
 
-public class AccountService : IAccountService
+public partial class AccountService : IAccountService
 {
     private readonly ILogger<AccountService> _logger;
 
@@ -29,6 +31,10 @@ public class AccountService : IAccountService
     private readonly IGuestAccountRepository _guestAccountRepository;
     
     private readonly IOptions<JwtOptions> _jwtOptions;
+
+    // Copied from https://emailregex.com/
+    [GeneratedRegex("^(?(\")(\".+?(?<!\\\\)\"@)|(([0-9a-z]((\\.(?!\\.))|[-!#\\$%&'\\*\\+/=\\?\\^`\\{\\}\\|~\\w])*)(?<=[0-9a-z])@))(?(\\[)(\\[(\\d{1,3}\\.){3}\\d{1,3}\\])|(([0-9a-z][-\\w]*[0-9a-z]*\\.)+[a-z0-9][\\-a-z0-9]{0,22}[a-z0-9]))$", RegexOptions.IgnoreCase)]
+    private static partial Regex EmailRegex();
 
     public AccountService(ILogger<AccountService> logger, IPasswordService passwordService,
         IUserRepository userRepository, IEmailAccountRepository emailAccountRepository,
@@ -141,5 +147,10 @@ public class AccountService : IAccountService
         });
 
         return jwtToken;
+    }
+
+    public bool IsValidEmail(string email)
+    {
+        return EmailRegex().IsMatch(email);
     }
 }
