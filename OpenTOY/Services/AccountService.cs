@@ -4,6 +4,8 @@ using Microsoft.Extensions.Options;
 using OpenTOY.Data.Entities;
 using OpenTOY.Data.Repositories;
 using OpenTOY.Emails.Views.Emails.AccountCreated;
+using OpenTOY.Emails.Views.Emails.EmailChanged;
+using OpenTOY.Emails.Views.Emails.PasswordChanged;
 using OpenTOY.Emails.Views.Emails.ResetPassword;
 using OpenTOY.Endpoints;
 using OpenTOY.Options;
@@ -90,6 +92,12 @@ public partial class AccountService : IAccountService
         emailAccountEntity.Salt = Convert.ToHexString(salt);
 
         await _emailAccountRepository.UpdateAsync(emailAccountEntity);
+
+        var serviceName = GetServiceName(serviceId);
+        var model = new PasswordChangedViewModel(email, serviceName);
+        await _emailService.SendEmailAsync(email, "OpenTOY Password Changed",
+            "/Views/Emails/PasswordChanged/PasswordChangedEmail.cshtml", model);
+
         return true;
     }
 
@@ -108,6 +116,12 @@ public partial class AccountService : IAccountService
 
         emailAccountEntity.Email = newEmail.ToLower();
         await _emailAccountRepository.UpdateAsync(emailAccountEntity);
+
+        var serviceName = GetServiceName(serviceId);
+        var model = new EmailChangedViewModel(oldEmail, newEmail, serviceName);
+        await _emailService.SendEmailAsync(oldEmail, "OpenTOY Email Changed",
+            "/Views/Emails/EmailChanged/EmailChangedEmail.cshtml", model);
+
         return true;
     }
 
@@ -209,12 +223,7 @@ public partial class AccountService : IAccountService
             return false;
         }
 
-        var serviceName = serviceId.ToString();
-        if (_serviceOptions.Value.Services.TryGetValue(serviceName, out var serviceInfo))
-        {
-            serviceName = serviceInfo.Title;
-        }
-
+        var serviceName = GetServiceName(serviceId);
         var model = new ResetPasswordViewModel(email, serviceName, "");
         await _emailService.SendEmailAsync(email, $"{serviceName} Password Reset",
             "/Views/Emails/ResetPassword/ResetPasswordEmail.cshtml", model);
@@ -239,5 +248,16 @@ public partial class AccountService : IAccountService
     public bool IsValidEmail(string email)
     {
         return EmailRegex().IsMatch(email);
+    }
+
+    private string GetServiceName(int serviceId)
+    {
+        var serviceName = serviceId.ToString();
+        if (_serviceOptions.Value.Services.TryGetValue(serviceName, out var serviceInfo))
+        {
+            serviceName = serviceInfo.Title;
+        }
+
+        return serviceName;
     }
 }
